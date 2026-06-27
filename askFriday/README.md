@@ -37,6 +37,17 @@ build Vencord from source with this plugin folder dropped in.
 - [Git](https://git-scm.com)
 - Desktop Discord or [Vesktop](https://github.com/Vencord/Vesktop) (not the browser)
 
+### Quick build (script)
+
+From this repo, run the helper - it clones/updates Vencord, copies the plugin in,
+and builds:
+```bash
+./build.sh                              # builds into ~/Vencord
+VENCORD_DIR=~/code/Vencord ./build.sh   # or a custom location
+```
+Then skip to **Step 2** to load the build. The manual steps below do the same
+thing by hand.
+
 ### Step 1 - build Vencord with the plugin (both clients)
 
 ```bash
