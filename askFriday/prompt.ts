@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { sanitize } from "./filter";
+
 export interface MessageLike {
     content: string;
     author?: { username?: string; };
@@ -12,10 +14,23 @@ export interface MessageLike {
 export interface ToneView {
     tone: string;
     customTone: string;
+    personality: string;
+    customPersonality: string;
     length: string;
     useEmojis: boolean;
     matchLanguage: boolean;
+    filterSlurs: boolean;
     extraInstructions: string;
+}
+
+export interface StyleOverride {
+    tone?: string;
+    personality?: string;
+}
+
+/** Merge a one-shot style override (from the re-roll menu) over saved settings. */
+export function applyOverride(view: ToneView, override: StyleOverride = {}): ToneView {
+    return { ...view, ...override };
 }
 
 /** Tone presets. `human` is false only for robotic - everything else gets the
@@ -31,6 +46,31 @@ export const TONE_PRESETS: Record<string, TonePreset> = {
     witty: { line: "Be witty and a little playful.", human: true },
     concise: { line: "Be blunt and to the point - no fluff.", human: true },
     robotic: { line: "Reply in a formal, robotic, bot-like manner. Structured and impersonal.", human: false },
+    enthusiastic: { line: "Be enthusiastic and energetic.", human: true },
+    empathetic: { line: "Be empathetic and understanding.", human: true },
+    formal: { line: "Be formal and measured.", human: true },
+    playful: { line: "Be playful and lighthearted.", human: true },
+    dramatic: { line: "Be dramatic and expressive.", human: true },
+    matteroffact: { line: "Be matter-of-fact and neutral.", human: true },
+    encouraging: { line: "Be encouraging and supportive.", human: true },
+    flirty: { line: "Be flirty and charming, lightly.", human: true },
+};
+
+/** Personality presets. Orthogonal to tone - these set the character speaking.
+ *  `none` has no entry (omitted from the prompt). Voice text, meant to be tuned. */
+export const PERSONALITY_PRESETS: Record<string, { line: string; }> = {
+    mentor: { line: "Speak as a warm, patient mentor: encouraging and supportive, never condescending." },
+    nerd: { line: "Adopt a deadpan nerd persona: dry, precise, the occasional understated reference, unbothered." },
+    gamer: { line: "Adopt a hype gamer-friend persona: high energy, casual gaming slang, hyped for the other person." },
+    sarcastic: { line: "Adopt a sarcastic, sardonic persona: playful dry irony, but never mean-spirited." },
+    wholesome: { line: "Adopt a wholesome, supportive persona: kind, uplifting, genuinely rooting for them." },
+    goblin: { line: "Adopt a chaotic goblin persona: gremlin energy, lowercase, a little unhinged, harmless mischief." },
+    aloof: { line: "Adopt a cool, aloof persona: detached, understated, effortlessly unbothered." },
+    enthusiast: { line: "Adopt a geeky enthusiast persona: visibly excited about the topic, nerds out, shares the joy." },
+    stoic: { line: "Adopt a stoic operator persona: terse, calm, no wasted words, quietly competent." },
+    optimist: { line: "Adopt a bubbly optimist persona: sunny, upbeat, finds the bright side." },
+    britwit: { line: "Adopt a dry British wit persona: understatement, deadpan irony, gentle sarcasm." },
+    professor: { line: "Adopt a patient professor persona: explains clearly and thoroughly, structured and illuminating." },
 };
 
 const LENGTH_LINES: Record<string, string> = {
@@ -56,6 +96,11 @@ function composeSystemPrompt(t: ToneView, hasContext: boolean): string {
     // Custom tones are treated as human unless they say otherwise; robotic opts out.
     const human = isCustom ? true : preset.human;
 
+    const isCustomP = t.personality === "custom" && t.customPersonality.trim();
+    const personalityLine = isCustomP
+        ? t.customPersonality.trim()
+        : (PERSONALITY_PRESETS[t.personality]?.line ?? "");
+
     const lines: string[] = [
         "You are helping me write a reply to a Discord message.",
         "Write the reply AS ME, in first person, ready to paste into the chat box.",
@@ -63,6 +108,7 @@ function composeSystemPrompt(t: ToneView, hasContext: boolean): string {
             ? "Recent channel messages are provided for context - use them for continuity if this is part of an ongoing conversation; otherwise just reply to the target message on its own."
             : "",
         toneLine,
+        personalityLine,
         LENGTH_LINES[t.length] ?? LENGTH_LINES.short,
         t.useEmojis ? "Emojis are okay if they fit." : "Do not use emojis.",
         t.matchLanguage ? "Reply in the same language as the original message." : "",
@@ -87,14 +133,18 @@ export function buildPrompt(
     message: MessageLike,
     store: ToneView,
     context: Context = {},
+    sanitizeFn: (text: string) => string = sanitize,
 ): { system: string; user: string; } {
-    const before = context.before ?? [];
-    const after = context.after ?? [];
+    const clean = (s: string) => (store.filterSlurs ? sanitizeFn(s) : s);
+    const scrub = (msgs: MessageLike[]) => msgs.map(m => ({ ...m, content: clean(m.content) }));
+
+    const before = scrub(context.before ?? []);
+    const after = scrub(context.after ?? []);
     const hasContext = before.length > 0 || after.length > 0;
 
     const system = composeSystemPrompt(store, hasContext);
     const who = message.author?.username ? `${message.author.username} said:` : "Someone said:";
-    const target = `${who}\n"""\n${message.content}\n"""`;
+    const target = `${who}\n"""\n${clean(message.content)}\n"""`;
 
     const parts: string[] = [];
     if (before.length) parts.push(`Recent conversation (oldest to newest):\n${transcript(before)}`);

@@ -8,11 +8,12 @@ import assert from "node:assert";
 import test from "node:test";
 
 import { buildGenerateOptions, resolveModel, StoreView } from "./config";
-import { buildPrompt, ToneView } from "./prompt";
+import { applyOverride, buildPrompt, PERSONALITY_PRESETS, ToneView } from "./prompt";
 
 const tone = (o: Partial<ToneView> = {}): ToneView => ({
-    tone: "human", customTone: "", length: "short",
-    useEmojis: false, matchLanguage: true, extraInstructions: "", ...o,
+    tone: "human", customTone: "", personality: "none", customPersonality: "",
+    length: "short", useEmojis: false, matchLanguage: true,
+    filterSlurs: true, extraInstructions: "", ...o,
 });
 
 const store = (o: Partial<StoreView> = {}): StoreView => ({
@@ -107,4 +108,65 @@ test("apikey mode carries the right key; cli mode omits it", () => {
     const c = buildGenerateOptions(store({ authMode: "local-cli", cliPath: "/bin/claude" }), "s", "u");
     assert.equal(c.apiKey, undefined);
     assert.equal(c.cliPath, "/bin/claude");
+});
+
+test("personality line is included when set and omitted for none", () => {
+    const withP = buildPrompt({ content: "hi" }, tone({ personality: "mentor" })).system;
+    assert.match(withP, /warm, patient mentor/i);
+
+    const withoutP = buildPrompt({ content: "hi" }, tone({ personality: "none" })).system;
+    assert.doesNotMatch(withoutP, /persona/i);
+});
+
+test("custom personality uses the free-text field", () => {
+    const { system } = buildPrompt({ content: "hi" }, tone({
+        personality: "custom", customPersonality: "a medieval town crier",
+    }));
+    assert.match(system, /medieval town crier/);
+});
+
+test("robotic tone with a personality still drops the human framing", () => {
+    const { system } = buildPrompt({ content: "hi" }, tone({ tone: "robotic", personality: "mentor" }));
+    assert.doesNotMatch(system, /real person/i);
+    assert.match(system, /warm, patient mentor/i);
+});
+
+test("applyOverride merges tone/personality over the view", () => {
+    const base = tone({ tone: "human", personality: "none" });
+    const merged = applyOverride(base, { tone: "witty", personality: "nerd" });
+    assert.equal(merged.tone, "witty");
+    assert.equal(merged.personality, "nerd");
+    // untouched fields preserved
+    assert.equal(merged.length, "short");
+    // no override returns an equivalent view
+    assert.equal(applyOverride(base).tone, "human");
+});
+
+test("sanitizeFn is applied to target + context but not to extraInstructions", () => {
+    const fake = (s: string) => s.replace(/z/g, "*");
+    const { system, user } = buildPrompt(
+        { content: "zebra", author: { username: "zoe" } },
+        tone({ filterSlurs: true, extraInstructions: "zest" }),
+        { before: [{ content: "zap", author: { username: "zed" } }] },
+        fake,
+    );
+    assert.match(user, /\*ebra/);        // target content sanitized
+    assert.match(user, /\*ap/);          // context content sanitized
+    assert.match(system, /zest/);        // extraInstructions NOT sanitized
+});
+
+test("filterSlurs=false bypasses the sanitizer", () => {
+    const fake = (s: string) => s.replace(/z/g, "*");
+    const { user } = buildPrompt(
+        { content: "zebra" },
+        tone({ filterSlurs: false }),
+        {},
+        fake,
+    );
+    assert.match(user, /zebra/);
+});
+
+test("new tone presets resolve to their line", () => {
+    assert.match(buildPrompt({ content: "hi" }, tone({ tone: "enthusiastic" })).system, /enthusiastic/i);
+    assert.match(buildPrompt({ content: "hi" }, tone({ tone: "flirty" })).system, /flirty/i);
 });
