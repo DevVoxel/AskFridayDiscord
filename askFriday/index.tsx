@@ -10,6 +10,7 @@ import definePlugin, { PluginNative } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
 import { ChannelStore, DraftStore, DraftType, MessageStore, Toasts } from "@webpack/common";
 
+import { addFridayContextMenu, removeFridayContextMenu } from "./contextMenu";
 import { buildGenerateOptions } from "./config";
 import { applyOverride, buildPrompt, StyleOverride } from "./prompt";
 import { settings } from "./settings";
@@ -113,9 +114,11 @@ export default definePlugin({
                 onClick: () => generateReply(message),
             };
         }, FridayIcon);
+        addFridayContextMenu();
     },
 
     stop() {
         removeMessagePopoverButton("AskFriday");
+        removeFridayContextMenu();
     },
 });
