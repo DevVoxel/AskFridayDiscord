@@ -97,7 +97,7 @@ async function handleClick(message: any) {
 export default definePlugin({
     name: "AskFriday",
     description: "Hover a message and ask AI (Friday) to draft a reply into your compose box. Desktop only.",
-    authors: [{ name: "Aiden", id: 0n }],
+    authors: [{ name: "Aiden Smith", id: 0n }],
     settings,
     dependencies: ["MessagePopoverAPI"],
 
