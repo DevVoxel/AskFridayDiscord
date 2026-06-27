@@ -8,7 +8,7 @@ import { addMessagePopoverButton, removeMessagePopoverButton } from "@api/Messag
 import { insertTextIntoChatInputBox } from "@utils/discord";
 import definePlugin, { PluginNative } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ChannelStore, DraftStore, DraftType, Toasts } from "@webpack/common";
+import { ChannelStore, DraftStore, DraftType, MessageStore, Toasts } from "@webpack/common";
 
 import { buildGenerateOptions } from "./config";
 import { buildPrompt } from "./prompt";
@@ -35,10 +35,32 @@ function toast(message: string, type = Toasts.Type.MESSAGE) {
     Toasts.show({ message, id: Toasts.genId(), type });
 }
 
+const MAX_CTX_CHARS = 1000; // cap per message so the prompt can't balloon
+
+// The N cached messages immediately before the target, oldest→newest, as the
+// conversation leading up to it. Skips empty/system messages.
+function gatherContext(message: any) {
+    if (!settings.store.includeContext) return [];
+    const count = settings.store.contextCount as number;
+    if (!count) return [];
+
+    const all = MessageStore.getMessages(message.channel_id)?._array ?? [];
+    const idx = all.findIndex((m: any) => m.id === message.id);
+    const end = idx === -1 ? all.length : idx; // messages strictly before target
+    return all
+        .slice(Math.max(0, end - count), end)
+        .filter((m: any) => typeof m.content === "string" && m.content.trim())
+        .map((m: any) => ({
+            content: m.content.slice(0, MAX_CTX_CHARS),
+            author: { username: m.author?.username },
+        }));
+}
+
 async function handleClick(message: any) {
     toast("Friday is thinking…");
 
-    const { system, user } = buildPrompt(message, settings.store as any);
+    const context = gatherContext(message);
+    const { system, user } = buildPrompt(message, settings.store as any, context);
     const opts = buildGenerateOptions(settings.store as any, system, user);
 
     if (opts.authMode === "apikey" && !opts.apiKey) {

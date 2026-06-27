@@ -59,6 +59,31 @@ test("user prompt embeds author + message content", () => {
     assert.match(user, /Nix package/);
 });
 
+test("no context → no conversation block, no context instruction", () => {
+    const { system, user } = buildPrompt({ content: "hi" }, tone());
+    assert.doesNotMatch(user, /Recent conversation/);
+    assert.doesNotMatch(system, /Recent channel messages/);
+});
+
+test("context → conversation transcript + continuity instruction", () => {
+    const ctx = [
+        { content: "anyone use nix?", author: { username: "carol" } },
+        { content: "yeah daily", author: { username: "dave" } },
+    ];
+    const { system, user } = buildPrompt({ content: "how do I install a package?", author: { username: "alice" } }, tone(), ctx);
+    assert.match(user, /Recent conversation/);
+    assert.match(user, /carol: anyone use nix\?/);
+    assert.match(user, /dave: yeah daily/);
+    assert.match(user, /The message I'm replying to:/);
+    assert.match(system, /Recent channel messages.*context/i);
+});
+
+test("human default reads as a helpful engineer", () => {
+    const { system } = buildPrompt({ content: "hi" }, tone({ tone: "human" }));
+    assert.match(system, /knowledgeable engineer/i);
+    assert.match(system, /technical terms/i);
+});
+
 test("customModel overrides the per-provider dropdown", () => {
     assert.equal(resolveModel(store({ customModel: "my-model" })), "my-model");
     assert.equal(resolveModel(store({ provider: "openai" })), "gpt-5.5");

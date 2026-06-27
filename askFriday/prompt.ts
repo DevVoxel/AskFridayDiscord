@@ -23,7 +23,7 @@ export interface ToneView {
 interface TonePreset { line: string; human: boolean; }
 
 export const TONE_PRESETS: Record<string, TonePreset> = {
-    human: { line: "Sound like a real person typing — natural, with contractions, no AI tells.", human: true },
+    human: { line: "Be a helpful, knowledgeable engineer helping out a peer — clear and genuinely useful, sounding human and natural while using correct technical terms where they fit. Don't dumb it down.", human: true },
     casual: { line: "Keep it casual and relaxed, like texting a friend. Lowercase is fine.", human: true },
     friendly: { line: "Be warm and friendly.", human: true },
     technical: { line: "Be technical and precise. Assume domain knowledge, use correct terminology, stay accurate.", human: true },
@@ -49,7 +49,7 @@ const LENGTH_LINES: Record<string, string> = {
  * making your own. Tweak wording, ordering, the "rules" list — anything here.
  * ───────────────────────────────────────────────────────────────────────────
  */
-function composeSystemPrompt(t: ToneView): string {
+function composeSystemPrompt(t: ToneView, hasContext: boolean): string {
     const isCustom = t.tone === "custom" && t.customTone.trim();
     const preset = TONE_PRESETS[t.tone] ?? TONE_PRESETS.human;
     const toneLine = isCustom ? t.customTone.trim() : preset.line;
@@ -59,6 +59,9 @@ function composeSystemPrompt(t: ToneView): string {
     const lines: string[] = [
         "You are helping me write a reply to a Discord message.",
         "Write the reply AS ME, in first person, ready to paste into the chat box.",
+        hasContext
+            ? "Recent channel messages are provided for context — use them for continuity if this is part of an ongoing conversation; otherwise just reply to the target message on its own."
+            : "",
         toneLine,
         LENGTH_LINES[t.length] ?? LENGTH_LINES.short,
         t.useEmojis ? "Emojis are okay if they fit." : "Do not use emojis.",
@@ -70,9 +73,23 @@ function composeSystemPrompt(t: ToneView): string {
     return lines.filter(Boolean).join("\n");
 }
 
-export function buildPrompt(message: MessageLike, store: ToneView): { system: string; user: string; } {
-    const system = composeSystemPrompt(store);
+export function buildPrompt(
+    message: MessageLike,
+    store: ToneView,
+    context: MessageLike[] = [],
+): { system: string; user: string; } {
+    const system = composeSystemPrompt(store, context.length > 0);
     const who = message.author?.username ? `${message.author.username} said:` : "Someone said:";
-    const user = `${who}\n"""\n${message.content}\n"""\n\nWrite my reply.`;
+    const target = `${who}\n"""\n${message.content}\n"""`;
+
+    let convo = "";
+    if (context.length) {
+        const lines = context
+            .map(m => `${m.author?.username ?? "someone"}: ${m.content}`)
+            .join("\n");
+        convo = `Recent conversation (oldest to newest):\n${lines}\n\n`;
+    }
+
+    const user = `${convo}The message I'm replying to:\n${target}\n\nWrite my reply.`;
     return { system, user };
 }

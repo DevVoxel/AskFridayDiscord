@@ -132,4 +132,19 @@ export const settings = definePluginSettings({
         description: "Extra instructions appended to every prompt (optional)",
         default: "",
     },
+
+    // ── Conversation context ────────────────────────────────────────────────
+    includeContext: {
+        type: OptionType.BOOLEAN,
+        description: "Feed recent channel messages as context so replies follow the conversation",
+        default: true,
+    },
+    contextCount: {
+        type: OptionType.SLIDER,
+        description: "How many recent messages to include as context",
+        markers: [0, 5, 10, 15, 20],
+        default: 15,
+        stickToMarkers: true,
+        hidden: () => !settings.store.includeContext,
+    },
 });
