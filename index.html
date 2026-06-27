@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AskFriday — AI reply assistant for Vencord</title>
+<meta name="description" content="A Vencord plugin that drafts a reply to any Discord message with Claude, ChatGPT, or Gemini.">
+<style>
+  :root {
+    --bg: #14151a;
+    --panel: #1b1d24;
+    --text: #e6e6ea;
+    --muted: #9a9ca6;
+    --accent: #c8a8ff;
+    --line: #2a2c36;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 72px 24px 96px; }
+  header { margin-bottom: 40px; }
+  h1 { font-size: 2.4rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h1 .spark { color: var(--accent); }
+  .tag { color: var(--muted); font-size: 1.1rem; margin: 0; }
+  h2 { font-size: 1.15rem; margin: 40px 0 12px; letter-spacing: 0.01em; }
+  p { margin: 0 0 16px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul { margin: 0 0 16px; padding-left: 20px; }
+  li { margin: 4px 0; }
+  .muted { color: var(--muted); }
+  .note {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    background: var(--panel);
+    border-radius: 6px;
+    padding: 12px 16px;
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 0 24px;
+  }
+  pre {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    font: 13.5px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color: #d7d9e0;
+  }
+  pre .c { color: var(--muted); }
+  .btns { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 8px; }
+  .btn {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .btn.primary { background: var(--accent); color: #1a1326; border-color: transparent; }
+  .btn:hover { text-decoration: none; border-color: var(--accent); }
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1><span class="spark">✦</span> AskFriday</h1>
+    <p class="tag">Hover a Discord message, ask AI to draft your reply.</p>
+  </header>
+
+  <p>
+    AskFriday is a <a href="https://vencord.dev">Vencord</a> plugin. Hover any
+    message, click the <strong>Ask Friday</strong> button, and an LLM drafts a
+    reply — using the surrounding conversation as context — straight into your
+    compose box. You read it, edit it, and hit send. It never sends for you.
+  </p>
+
+  <div class="btns">
+    <a class="btn primary" href="https://github.com/DevVoxel/AskFridayDiscord">View on GitHub</a>
+    <a class="btn" href="https://github.com/DevVoxel/AskFridayDiscord#readme">Read the docs</a>
+  </div>
+
+  <h2>What it does</h2>
+  <ul>
+    <li>Drafts a reply to any message into your compose box (you stay in control of sending).</li>
+    <li>Reads the recent conversation around the message so replies follow the thread.</li>
+    <li>Works with <strong>Claude</strong>, <strong>ChatGPT</strong>, and <strong>Gemini</strong> — via an API key, or your existing subscription through the official CLI.</li>
+    <li>Tone presets: human, casual, technical, professional, witty, robotic, or your own.</li>
+  </ul>
+
+  <div class="note">
+    Desktop only — Vencord on the desktop app or Vesktop. It won't run on Discord in a browser.
+  </div>
+
+  <h2>Install</h2>
+  <p class="muted">Requires Node.js, pnpm, and git. AskFriday is built into Vencord from source.</p>
+<pre><span class="c"># 1. get a Vencord source tree</span>
+git clone https://github.com/Vendicated/Vencord && cd Vencord
+pnpm install --frozen-lockfile
+
+<span class="c"># 2. drop AskFriday into userplugins (copy, don't symlink)</span>
+mkdir -p src/userplugins
+cp -r /path/to/AskFridayDiscord/askFriday src/userplugins/askFriday
+
+<span class="c"># 3. build and inject into your client</span>
+pnpm build
+pnpm inject   <span class="c"># pick Vesktop / your desktop Discord</span></pre>
+  <p>
+    Fully restart Discord, then <strong>Settings → Vencord → Plugins → AskFriday</strong>,
+    enable it, and open the cog to set your provider, key, and tone. Full steps in the
+    <a href="https://github.com/DevVoxel/AskFridayDiscord#readme">README</a>.
+  </p>
+
+  <footer>
+    <a href="https://github.com/DevVoxel/AskFridayDiscord">github.com/DevVoxel/AskFridayDiscord</a>
+    · Not affiliated with Discord or Vencord.
+  </footer>
+</main>
+</body>
+</html>
