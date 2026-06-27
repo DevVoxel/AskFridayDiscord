@@ -32,22 +32,22 @@ export const settings = definePluginSettings({
         ],
     },
 
-    // ── API keys (plaintext — see warning) ──────────────────────────────────
+    // ── API keys (plaintext - see warning) ──────────────────────────────────
     anthropicKey: {
         type: OptionType.STRING,
-        description: "Anthropic API key — stored in PLAINTEXT in Vencord settings. Use a scoped key.",
+        description: "Anthropic API key - stored in PLAINTEXT in Vencord settings. Use a scoped key.",
         default: "",
         hidden: isApiKeyFor("anthropic"),
     },
     openaiKey: {
         type: OptionType.STRING,
-        description: "OpenAI API key — stored in PLAINTEXT. Use a scoped key.",
+        description: "OpenAI API key - stored in PLAINTEXT. Use a scoped key.",
         default: "",
         hidden: isApiKeyFor("openai"),
     },
     geminiKey: {
         type: OptionType.STRING,
-        description: "Google Gemini API key — stored in PLAINTEXT. Use a scoped key.",
+        description: "Google Gemini API key - stored in PLAINTEXT. Use a scoped key.",
         default: "",
         hidden: isApiKeyFor("gemini"),
     },

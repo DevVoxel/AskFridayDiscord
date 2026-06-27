@@ -12,7 +12,7 @@ export interface GenerateOptions {
     provider: Provider;
     authMode: AuthMode;
     model: string;
-    /** API key (authMode "apikey") — ignored in local-cli mode. */
+    /** API key (authMode "apikey") - ignored in local-cli mode. */
     apiKey?: string;
     /** Optional explicit CLI binary path (authMode "local-cli"). */
     cliPath?: string;
@@ -23,7 +23,7 @@ export interface GenerateOptions {
 /** Normalised result returned from native.ts. Exactly one field is set. */
 export type GenerateResult = { text: string } | { error: string };
 
-/** Model dropdown choices per provider. Editable — a custom STRING override in
+/** Model dropdown choices per provider. Editable - a custom STRING override in
  *  settings lets the user type any model id these lists don't cover. */
 export const MODELS: Record<Provider, { label: string; value: string; }[]> = {
     anthropic: [

@@ -16,7 +16,7 @@ import { settings } from "./settings";
 
 const Native = VencordNative.pluginHelpers.AskFriday as PluginNative<typeof import("./native")>;
 
-// Discord's draft action creators — clearDraft empties the visible compose box.
+// Discord's draft action creators - clearDraft empties the visible compose box.
 const ChatInputActions = findByPropsLazy("clearDraft", "saveDraft");
 
 // Remembers the last reply Friday dropped per channel, so a regenerate can wipe

@@ -99,12 +99,12 @@ async function gemini(o: GenerateOptions): Promise<GenerateResult> {
 function apiError(name: string, status: number, msg?: string) {
     if (status === 401 || status === 403) return `Friday: ${name} rejected the API key (${status})`;
     if (status === 429) return `Friday: ${name} rate limit / quota hit (429)`;
-    return `Friday: ${name} error ${status}${msg ? ` — ${msg}` : ""}`;
+    return `Friday: ${name} error ${status}${msg ? ` - ${msg}` : ""}`;
 }
 
 // ── Local CLI path (subscription via the CLI's own OAuth login) ──────────────
 // We spawn the official, already-logged-in CLI in non-interactive mode. The CLI
-// owns all auth — we never read or handle a token. Sanctioned subscription use.
+// owns all auth - we never read or handle a token. Sanctioned subscription use.
 
 function viaCli(o: GenerateOptions): Promise<GenerateResult> {
     const bin = o.cliPath?.trim() || DEFAULT_CLI[o.provider];
@@ -115,8 +115,8 @@ function viaCli(o: GenerateOptions): Promise<GenerateResult> {
             (err, stdout, stderr) => {
                 if (err) {
                     if ((err as any).code === "ENOENT")
-                        return resolve({ error: `Friday: '${bin}' not found on PATH — install the CLI or set its path` });
-                    return resolve({ error: `Friday: ${bin} failed — ${stderr?.trim() || err.message}` });
+                        return resolve({ error: `Friday: '${bin}' not found on PATH - install the CLI or set its path` });
+                    return resolve({ error: `Friday: ${bin} failed - ${stderr?.trim() || err.message}` });
                 }
                 resolve(parseCliOutput(o.provider, stdout));
             });

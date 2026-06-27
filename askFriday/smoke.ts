@@ -5,7 +5,7 @@
  */
 
 /*
- * Local end-to-end smoke test — runs the REAL provider calls in native.ts with
+ * Local end-to-end smoke test - runs the REAL provider calls in native.ts with
  * your own keys, outside Discord. Nothing here touches Vencord.
  *
  * API-key mode (set whichever keys you have):
@@ -57,7 +57,7 @@ async function run(provider: Provider) {
 }
 
 (async () => {
-    console.log(`AskFriday smoke — mode: ${useCli ? "local-cli (subscription)" : "api key"}\n`);
+    console.log(`AskFriday smoke - mode: ${useCli ? "local-cli (subscription)" : "api key"}\n`);
     for (const p of ["anthropic", "openai", "gemini"] as Provider[]) {
         try { await run(p); } catch (e: any) { console.log(`• ${p} threw: ${e?.message ?? e}`); }
     }
