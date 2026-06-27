@@ -110,9 +110,9 @@ pnpm install --frozen-lockfile
 mkdir -p src/userplugins
 cp -r /path/to/AskFridayDiscord/askFriday src/userplugins/askFriday
 
-<span class="c"># 3. build and inject into your client</span>
+<span class="c"># 3. build, then load it</span>
 pnpm build
-pnpm inject   <span class="c"># pick Vesktop / your desktop Discord</span></pre>
+pnpm inject   <span class="c"># stock Discord; for Vesktop, point it at Vencord/dist instead</span></pre>
   <p>
     Fully restart Discord, then <strong>Settings → Vencord → Plugins → AskFriday</strong>,
     enable it, and open the cog to set your provider, key, and tone. Full steps in the

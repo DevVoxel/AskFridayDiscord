@@ -37,28 +37,55 @@ build Vencord from source with this plugin folder dropped in.
 - [Git](https://git-scm.com)
 - Desktop Discord or [Vesktop](https://github.com/Vencord/Vesktop) (not the browser)
 
-### Steps
+### Step 1 - build Vencord with the plugin (both clients)
 
 ```bash
-# 1. get a Vencord source tree
+# get a Vencord source tree
 git clone https://github.com/Vendicated/Vencord && cd Vencord
 pnpm install --frozen-lockfile
 
-# 2. drop AskFriday into userplugins (COPY, don't symlink - a symlink to a path
-#    outside the tree breaks Vencord's @api/@utils path aliases at build time)
+# drop AskFriday into userplugins (COPY, don't symlink - a symlink to a path
+# outside the tree breaks Vencord's @api/@utils path aliases at build time)
 mkdir -p src/userplugins
 cp -r /path/to/AskFridayDiscord/askFriday src/userplugins/askFriday
 
-# 3. build + inject into your client
 pnpm build
-pnpm inject     # arrow-key pick Vesktop / your desktop Discord, Enter
 ```
 
-Fully quit Discord (tray included) and reopen it. Then
-**User Settings → Vencord → Plugins → search "AskFriday" → toggle on → click the
-cog** to configure.
+### Step 2 - load it into your client
 
-> Updating the plugin later: re-`cp` the folder, `pnpm build`, restart Discord.
+Pick the one you use.
+
+**Stock desktop Discord** - inject:
+```bash
+pnpm inject     # arrow-key pick your desktop Discord, Enter
+```
+Fully quit Discord (tray included) and reopen.
+
+**Vesktop** - do NOT inject. Point Vesktop at your build instead:
+1. Open **Vesktop Settings -> Vencord** and find the Vencord location / custom
+   build option.
+2. Press **Change** and select your `Vencord/dist` folder.
+3. Restart Vesktop.
+
+Then in either client: **Settings -> Vencord -> Plugins -> search "AskFriday"
+-> toggle on -> click the cog** to configure.
+
+> Updating later: re-`cp` the folder, `pnpm build`, restart the client. No need
+> to re-inject or re-point.
+
+#### Vesktop + Flatpak note
+
+If your Vesktop is the **Flatpak** build (`~/.var/app/dev.vencord.Vesktop/`
+exists; `flatpak list | grep -i vesktop` lists it) it runs sandboxed:
+- The `Vencord/dist` you select must be in a path the sandbox can read; grant it
+  with `flatpak override --user --filesystem=/path/to/Vencord dev.vencord.Vesktop`.
+- **Local-CLI / subscription mode won't see your host `claude`/`codex`/`gemini`**
+  (they're outside the sandbox). Use API-key mode, or run a **non-Flatpak Vesktop**
+  (AUR `vesktop-bin`, AppImage) for CLI mode.
+
+The **AUR/native** build (`~/.config/vesktop/`; `pacman -Qo $(command -v vesktop)`
+names a package) has no sandbox - everything works as-is.
 
 ---
 
