@@ -11,7 +11,7 @@ import { findByPropsLazy } from "@webpack";
 import { ChannelStore, DraftStore, DraftType, MessageStore, Toasts } from "@webpack/common";
 
 import { buildGenerateOptions } from "./config";
-import { buildPrompt } from "./prompt";
+import { applyOverride, buildPrompt, StyleOverride } from "./prompt";
 import { settings } from "./settings";
 
 const Native = VencordNative.pluginHelpers.AskFriday as PluginNative<typeof import("./native")>;
@@ -63,11 +63,12 @@ function gatherContext(message: any) {
     return { before, after };
 }
 
-async function handleClick(message: any) {
+export async function generateReply(message: any, override?: StyleOverride) {
     toast("Friday is thinking…");
 
     const context = gatherContext(message);
-    const { system, user } = buildPrompt(message, settings.store as any, context);
+    const view = applyOverride(settings.store as any, override);
+    const { system, user } = buildPrompt(message, view, context);
     const opts = buildGenerateOptions(settings.store as any, system, user);
 
     if (opts.authMode === "apikey" && !opts.apiKey) {
@@ -109,7 +110,7 @@ export default definePlugin({
                 icon: FridayIcon,
                 message,
                 channel: ChannelStore.getChannel(message.channel_id),
-                onClick: () => handleClick(message),
+                onClick: () => generateReply(message),
             };
         }, FridayIcon);
     },
