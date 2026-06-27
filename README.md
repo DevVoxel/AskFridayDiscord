@@ -11,18 +11,18 @@ drops it into your compose box for you to review, edit, and send.
 ## Features
 
 - Message-hover button that drafts a reply to that message.
-- **Conversation-aware** — feeds the recent messages around the target (before
+- **Conversation-aware** - feeds the recent messages around the target (before
   *and* after, when they exist) so replies follow the thread.
 - Three providers: **Anthropic (Claude)**, **OpenAI (ChatGPT)**, **Google (Gemini)**.
 - Two auth modes:
-  - **API key (BYOK)** — pay-per-token. Official and stable.
-  - **Local CLI** — uses your *subscription* via the official CLI's own OAuth
+  - **API key (BYOK)** - pay-per-token. Official and stable.
+  - **Local CLI** - uses your *subscription* via the official CLI's own OAuth
     login (`claude`, `codex`, `gemini`). Safe and sanctioned (no token handling,
     no scraping). Slower (spawns a process) and counts against your subscription.
-- **Tone controls** — human / casual / technical / friendly / professional /
+- **Tone controls** - human / casual / technical / friendly / professional /
   witty / concise / robotic / custom, plus length, emojis, match-language, and
   free-form extra instructions.
-- **Regenerate** — click again to replace Friday's previous (untouched) draft
+- **Regenerate** - click again to replace Friday's previous (untouched) draft
   instead of stacking a second one.
 
 ---
@@ -37,28 +37,66 @@ build Vencord from source with this plugin folder dropped in.
 - [Git](https://git-scm.com)
 - Desktop Discord or [Vesktop](https://github.com/Vencord/Vesktop) (not the browser)
 
-### Steps
+### Quick build (script)
+
+From this repo, run the helper - it clones/updates Vencord, copies the plugin in,
+and builds:
+```bash
+./build.sh                              # builds into ~/Vencord
+VENCORD_DIR=~/code/Vencord ./build.sh   # or a custom location
+```
+Then skip to **Step 2** to load the build. The manual steps below do the same
+thing by hand.
+
+### Step 1 - build Vencord with the plugin (both clients)
 
 ```bash
-# 1. get a Vencord source tree
+# get a Vencord source tree
 git clone https://github.com/Vendicated/Vencord && cd Vencord
 pnpm install --frozen-lockfile
 
-# 2. drop AskFriday into userplugins (COPY, don't symlink — a symlink to a path
-#    outside the tree breaks Vencord's @api/@utils path aliases at build time)
+# drop AskFriday into userplugins (COPY, don't symlink - a symlink to a path
+# outside the tree breaks Vencord's @api/@utils path aliases at build time)
 mkdir -p src/userplugins
 cp -r /path/to/AskFridayDiscord/askFriday src/userplugins/askFriday
 
-# 3. build + inject into your client
 pnpm build
-pnpm inject     # arrow-key pick Vesktop / your desktop Discord, Enter
 ```
 
-Fully quit Discord (tray included) and reopen it. Then
-**User Settings → Vencord → Plugins → search "AskFriday" → toggle on → click the
-cog** to configure.
+### Step 2 - load it into your client
 
-> Updating the plugin later: re-`cp` the folder, `pnpm build`, restart Discord.
+Pick the one you use.
+
+**Stock desktop Discord** - inject:
+```bash
+pnpm inject     # arrow-key pick your desktop Discord, Enter
+```
+Fully quit Discord (tray included) and reopen.
+
+**Vesktop** - do NOT inject. Point Vesktop at your build instead:
+1. Open **Vesktop Settings -> Vencord** and find the Vencord location / custom
+   build option.
+2. Press **Change** and select your `Vencord/dist` folder.
+3. Restart Vesktop.
+
+Then in either client: **Settings -> Vencord -> Plugins -> search "AskFriday"
+-> toggle on -> click the cog** to configure.
+
+> Updating later: re-`cp` the folder, `pnpm build`, restart the client. No need
+> to re-inject or re-point.
+
+#### Vesktop + Flatpak note
+
+If your Vesktop is the **Flatpak** build (`~/.var/app/dev.vencord.Vesktop/`
+exists; `flatpak list | grep -i vesktop` lists it) it runs sandboxed:
+- The `Vencord/dist` you select must be in a path the sandbox can read; grant it
+  with `flatpak override --user --filesystem=/path/to/Vencord dev.vencord.Vesktop`.
+- **Local-CLI / subscription mode won't see your host `claude`/`codex`/`gemini`**
+  (they're outside the sandbox). Use API-key mode, or run a **non-Flatpak Vesktop**
+  (AUR `vesktop-bin`, AppImage) for CLI mode.
+
+The **AUR/native** build (`~/.config/vesktop/`; `pacman -Qo $(command -v vesktop)`
+names a package) has no sandbox - everything works as-is.
 
 ---
 
@@ -71,14 +109,14 @@ Open the AskFriday cog (Plugins page). Settings:
 |---------|--------------|
 | **Which AI to ask** | Anthropic / OpenAI / Gemini |
 | **How to authenticate** | `API key` or `Local CLI` (subscription) |
-| **<provider> API key** | shown in API-key mode — stored **plaintext**, use a scoped key |
+| **<provider> API key** | shown in API-key mode - stored **plaintext**, use a scoped key |
 | **Model** | per-provider dropdown; **Custom model id** overrides it |
-| **CLI binary path** | shown in Local-CLI mode — blank = `claude`/`codex`/`gemini` on PATH |
+| **CLI binary path** | shown in Local-CLI mode - blank = `claude`/`codex`/`gemini` on PATH |
 
 ### Tone & shape
 | Setting | What it does |
 |---------|--------------|
-| **Reply tone** | `Human (natural)` default — a helpful, knowledgeable engineer using correct technical terms. Also casual, technical, friendly, professional, witty, concise, robotic/bot-like, or **custom** |
+| **Reply tone** | `Human (natural)` default - a helpful, knowledgeable engineer using correct technical terms. Also casual, technical, friendly, professional, witty, concise, robotic/bot-like, or **custom** |
 | **Custom tone** | free-text tone (used when tone = Custom) |
 | **Reply length** | short / medium / long |
 | **Allow emojis** | on/off |
@@ -88,11 +126,11 @@ Open the AskFriday cog (Plugins page). Settings:
 ### Conversation context
 | Setting | What it does |
 |---------|--------------|
-| **Feed recent channel messages as context** | on by default — gives Friday the thread around the message so replies follow the conversation |
-| **How many recent messages** | slider: `0 / 5 / 10 / 15 / 20` (default **15**) — the lead-up count; up to 5 follow-up messages are added automatically when the target isn't the latest |
+| **Feed recent channel messages as context** | on by default - gives Friday the thread around the message so replies follow the conversation |
+| **How many recent messages** | slider: `0 / 5 / 10 / 15 / 20` (default **15**) - the lead-up count; up to 5 follow-up messages are added automatically when the target isn't the latest |
 
 Context is read from Discord's in-memory message cache (whatever's loaded in the
-channel) — no extra network fetch. The model is told to use it only when the
+channel) - no extra network fetch. The model is told to use it only when the
 message is part of an ongoing conversation, otherwise reply on its own.
 
 ---
@@ -107,17 +145,17 @@ message is part of an ongoing conversation, otherwise reply on its own.
 
 ### Auth modes in detail
 
-**API key** — paste a key for the active provider. Plaintext in settings; use a
+**API key** - paste a key for the active provider. Plaintext in settings; use a
 scoped/limited key.
 
-**Local CLI (subscription)** — log the relevant CLI in first:
+**Local CLI (subscription)** - log the relevant CLI in first:
 ```bash
 claude /login      # Claude Pro/Max
 codex login        # ChatGPT subscription
 gemini             # Google login
 ```
 The plugin shells out to the already-logged-in CLI; it never reads a token. This
-is the safe way to use a subscription — **not** web session scraping, which
+is the safe way to use a subscription - **not** web session scraping, which
 violates ToS and risks bans (intentionally not implemented here).
 
 ---
@@ -148,7 +186,7 @@ FRIDAY_CLI=1 npx tsx askFriday/smoke.ts
 | `index.tsx` | plugin def, hover button, context gathering, draft insert/replace |
 | `settings.tsx` | `definePluginSettings`: provider, keys, models, tone, context |
 | `config.ts` | settings store → `GenerateOptions` (pure, tested) |
-| `prompt.ts` | `buildPrompt()` — persona/voice + conversation context (pure, tested) |
+| `prompt.ts` | `buildPrompt()` - persona/voice + conversation context (pure, tested) |
 | `native.ts` | Node-side HTTP calls + CLI spawning (CORS-free) |
 | `providers.ts` | shared types + model/CLI tables |
 | `pure.test.ts` | tests for the Vencord-free modules |
@@ -161,5 +199,5 @@ FRIDAY_CLI=1 npx tsx askFriday/smoke.ts
 - Provider model ids drift; the model dropdowns plus a custom-model override keep
   you unstuck.
 - Local-CLI mode needs the CLI installed and logged in; errors surface as toasts.
-- Personal userplugin — official Vencord doesn't accept AI/API-key plugins, so
+- Personal userplugin - official Vencord doesn't accept AI/API-key plugins, so
   there's no upstream PR.
