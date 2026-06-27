@@ -7,13 +7,21 @@
 import { addMessagePopoverButton, removeMessagePopoverButton } from "@api/MessagePopover";
 import { insertTextIntoChatInputBox } from "@utils/discord";
 import definePlugin, { PluginNative } from "@utils/types";
-import { ChannelStore, Toasts } from "@webpack/common";
+import { findByPropsLazy } from "@webpack";
+import { ChannelStore, DraftStore, DraftType, Toasts } from "@webpack/common";
 
 import { buildGenerateOptions } from "./config";
 import { buildPrompt } from "./prompt";
 import { settings } from "./settings";
 
 const Native = VencordNative.pluginHelpers.AskFriday as PluginNative<typeof import("./native")>;
+
+// Discord's draft action creators — clearDraft empties the visible compose box.
+const ChatInputActions = findByPropsLazy("clearDraft", "saveDraft");
+
+// Remembers the last reply Friday dropped per channel, so a regenerate can wipe
+// it first instead of stacking a second draft on top.
+const lastDraft = new Map<string, string>();
 
 function FridayIcon() {
     return (
@@ -43,7 +51,18 @@ async function handleClick(message: any) {
         toast(res.error, Toasts.Type.FAILURE);
         return;
     }
-    insertTextIntoChatInputBox(res.text.trim());
+
+    const text = res.text.trim();
+    const channelId = message.channel_id;
+
+    // Regenerate: if Friday's previous draft is still sitting in the box
+    // untouched, clear it so the new reply replaces it rather than appending.
+    const current = DraftStore.getDraft(channelId, DraftType.ChannelMessage) ?? "";
+    if (current && current === lastDraft.get(channelId))
+        ChatInputActions.clearDraft(channelId, DraftType.ChannelMessage);
+
+    insertTextIntoChatInputBox(text);
+    lastDraft.set(channelId, text);
 }
 
 export default definePlugin({
