@@ -36,24 +36,31 @@ function toast(message: string, type = Toasts.Type.MESSAGE) {
 }
 
 const MAX_CTX_CHARS = 1000; // cap per message so the prompt can't balloon
+const MAX_AFTER = 5; // keep the "after" tail bounded for old messages
 
-// The N cached messages immediately before the target, oldest→newest, as the
-// conversation leading up to it. Skips empty/system messages.
+const toCtx = (msgs: any[]) => msgs
+    .filter(m => typeof m.content === "string" && m.content.trim())
+    .map(m => ({ content: m.content.slice(0, MAX_CTX_CHARS), author: { username: m.author?.username } }));
+
+// Pulls conversation context around the target from Discord's in-memory message
+// cache (no network call). `before` = the lead-up; `after` = follow-ups, only if
+// the target isn't the latest message.
 function gatherContext(message: any) {
-    if (!settings.store.includeContext) return [];
+    if (!settings.store.includeContext) return {};
     const count = settings.store.contextCount as number;
-    if (!count) return [];
+    if (!count) return {};
 
     const all = MessageStore.getMessages(message.channel_id)?._array ?? [];
     const idx = all.findIndex((m: any) => m.id === message.id);
     const end = idx === -1 ? all.length : idx; // messages strictly before target
-    return all
-        .slice(Math.max(0, end - count), end)
-        .filter((m: any) => typeof m.content === "string" && m.content.trim())
-        .map((m: any) => ({
-            content: m.content.slice(0, MAX_CTX_CHARS),
-            author: { username: m.author?.username },
-        }));
+
+    const before = toCtx(all.slice(Math.max(0, end - count), end));
+    // Only slice an "after" tail when the target was found and isn't last.
+    const after = idx === -1 || idx === all.length - 1
+        ? []
+        : toCtx(all.slice(idx + 1, idx + 1 + Math.min(count, MAX_AFTER)));
+
+    return { before, after };
 }
 
 async function handleClick(message: any) {

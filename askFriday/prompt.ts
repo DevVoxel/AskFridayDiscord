@@ -73,23 +73,34 @@ function composeSystemPrompt(t: ToneView, hasContext: boolean): string {
     return lines.filter(Boolean).join("\n");
 }
 
+export interface Context {
+    /** Messages leading up to the target, oldest→newest. */
+    before?: MessageLike[];
+    /** Messages that came after the target, oldest→newest (often empty). */
+    after?: MessageLike[];
+}
+
+const transcript = (msgs: MessageLike[]) =>
+    msgs.map(m => `${m.author?.username ?? "someone"}: ${m.content}`).join("\n");
+
 export function buildPrompt(
     message: MessageLike,
     store: ToneView,
-    context: MessageLike[] = [],
+    context: Context = {},
 ): { system: string; user: string; } {
-    const system = composeSystemPrompt(store, context.length > 0);
+    const before = context.before ?? [];
+    const after = context.after ?? [];
+    const hasContext = before.length > 0 || after.length > 0;
+
+    const system = composeSystemPrompt(store, hasContext);
     const who = message.author?.username ? `${message.author.username} said:` : "Someone said:";
     const target = `${who}\n"""\n${message.content}\n"""`;
 
-    let convo = "";
-    if (context.length) {
-        const lines = context
-            .map(m => `${m.author?.username ?? "someone"}: ${m.content}`)
-            .join("\n");
-        convo = `Recent conversation (oldest to newest):\n${lines}\n\n`;
-    }
+    const parts: string[] = [];
+    if (before.length) parts.push(`Recent conversation (oldest to newest):\n${transcript(before)}`);
+    parts.push(`The message I'm replying to:\n${target}`);
+    if (after.length) parts.push(`Messages after it:\n${transcript(after)}`);
+    parts.push("Write my reply.");
 
-    const user = `${convo}The message I'm replying to:\n${target}\n\nWrite my reply.`;
-    return { system, user };
+    return { system, user: parts.join("\n\n") };
 }

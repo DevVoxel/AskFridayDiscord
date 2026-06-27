@@ -65,17 +65,27 @@ test("no context → no conversation block, no context instruction", () => {
     assert.doesNotMatch(system, /Recent channel messages/);
 });
 
-test("context → conversation transcript + continuity instruction", () => {
-    const ctx = [
+test("before-context → transcript + continuity instruction", () => {
+    const before = [
         { content: "anyone use nix?", author: { username: "carol" } },
         { content: "yeah daily", author: { username: "dave" } },
     ];
-    const { system, user } = buildPrompt({ content: "how do I install a package?", author: { username: "alice" } }, tone(), ctx);
+    const { system, user } = buildPrompt({ content: "how do I install a package?", author: { username: "alice" } }, tone(), { before });
     assert.match(user, /Recent conversation/);
     assert.match(user, /carol: anyone use nix\?/);
     assert.match(user, /dave: yeah daily/);
     assert.match(user, /The message I'm replying to:/);
     assert.match(system, /Recent channel messages.*context/i);
+});
+
+test("after-context → appears below the target", () => {
+    const { user } = buildPrompt(
+        { content: "how do I install a package?", author: { username: "alice" } },
+        tone(),
+        { before: [{ content: "hey", author: { username: "carol" } }], after: [{ content: "try nix profile install", author: { username: "erin" } }] },
+    );
+    // ordering: conversation → target → after
+    assert.match(user, /Recent conversation[\s\S]*The message I'm replying to:[\s\S]*Messages after it:[\s\S]*erin: try nix profile install/);
 });
 
 test("human default reads as a helpful engineer", () => {
