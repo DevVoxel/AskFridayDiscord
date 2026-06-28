@@ -12,6 +12,7 @@ import { ChannelStore, DraftStore, DraftType, MessageStore, Toasts } from "@webp
 
 import { addFridayContextMenu, removeFridayContextMenu } from "./contextMenu";
 import { buildGenerateOptions } from "./config";
+import { humanizeText } from "./humanize";
 import { applyOverride, buildPrompt, StyleOverride } from "./prompt";
 import { settings } from "./settings";
 
@@ -83,7 +84,7 @@ export async function generateReply(message: any, override?: StyleOverride) {
         return;
     }
 
-    const text = res.text.trim();
+    const text = humanizeText(res.text.trim());
     const channelId = message.channel_id;
 
     // Regenerate: if Friday's previous draft is still sitting in the box
