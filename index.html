@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AskFriday - AI reply assistant for Vencord</title>
+<title>AskFriday</title>
 <meta name="description" content="A Vencord plugin that drafts a reply to any Discord message with Claude, ChatGPT, or Gemini.">
 <style>
   :root {
@@ -79,8 +79,8 @@
   <p>
     AskFriday is a <a href="https://vencord.dev">Vencord</a> plugin. Hover any
     message, click the <strong>Ask Friday</strong> button, and an LLM drafts a
-    reply - using the surrounding conversation as context - straight into your
-    compose box. You read it, edit it, and hit send. It never sends for you.
+    reply straight into your compose box, using the surrounding conversation as
+    context. You read it, edit it, and hit send. It never sends for you.
   </p>
 
   <div class="btns">
@@ -92,8 +92,10 @@
   <ul>
     <li>Drafts a reply to any message into your compose box (you stay in control of sending).</li>
     <li>Reads the recent conversation around the message so replies follow the thread.</li>
-    <li>Works with <strong>Claude</strong>, <strong>ChatGPT</strong>, and <strong>Gemini</strong> - via an API key, or your existing subscription through the official CLI.</li>
-    <li>Tone presets: human, casual, technical, professional, witty, robotic, or your own.</li>
+    <li>Works with <strong>Claude</strong>, <strong>ChatGPT</strong>, and <strong>Gemini</strong>, via an API key or your existing subscription through the official CLI.</li>
+    <li>Shape the voice with tone presets (casual, witty, formal, flirty, and more) plus a separate <strong>personality</strong> (warm mentor, deadpan nerd, hype gamer, and others), or your own custom text.</li>
+    <li>Right-click any message to re-roll the reply in a different tone or personality, no retyping.</li>
+    <li>Masks slurs and hate terms in gathered messages before they reach the AI (on by default).</li>
   </ul>
 
   <div class="note">
@@ -115,7 +117,7 @@ pnpm build
 pnpm inject   <span class="c"># stock Discord; for Vesktop, point it at Vencord/dist instead</span></pre>
   <p>
     Fully restart Discord, then <strong>Settings → Vencord → Plugins → AskFriday</strong>,
-    enable it, and open the cog to set your provider, key, and tone. Full steps in the
+    enable it, and open the cog to set your provider, key, tone, and personality. Full steps in the
     <a href="https://github.com/DevVoxel/AskFridayDiscord#readme">README</a>.
   </p>
 
