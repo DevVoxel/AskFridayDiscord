@@ -111,6 +111,7 @@ test("apikey mode carries the right key; cli mode omits it", () => {
 });
 
 test("personality line is included when set and omitted for none", () => {
+    assert.ok(PERSONALITY_PRESETS.mentor.line);
     const withP = buildPrompt({ content: "hi" }, tone({ personality: "mentor" })).system;
     assert.match(withP, /warm, patient mentor/i);
 
@@ -169,4 +170,27 @@ test("filterSlurs=false bypasses the sanitizer", () => {
 test("new tone presets resolve to their line", () => {
     assert.match(buildPrompt({ content: "hi" }, tone({ tone: "enthusiastic" })).system, /enthusiastic/i);
     assert.match(buildPrompt({ content: "hi" }, tone({ tone: "flirty" })).system, /flirty/i);
+});
+
+test("usernames in target and context are sanitized too", () => {
+    const fake = (s: string) => s.replace(/z/g, "*");
+    const { user } = buildPrompt(
+        { content: "hi", author: { username: "zoe" } },
+        tone({ filterSlurs: true }),
+        { before: [{ content: "hey", author: { username: "zed" } }] },
+        fake,
+    );
+    assert.match(user, /\*oe said:/);
+    assert.match(user, /\*ed: hey/);
+});
+
+test("filterSlurs=false leaves usernames untouched", () => {
+    const fake = (s: string) => s.replace(/z/g, "*");
+    const { user } = buildPrompt(
+        { content: "hi", author: { username: "zoe" } },
+        tone({ filterSlurs: false }),
+        {},
+        fake,
+    );
+    assert.match(user, /zoe said:/);
 });

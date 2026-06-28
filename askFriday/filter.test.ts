@@ -41,3 +41,13 @@ test("maskTerms preserves surrounding punctuation", () => {
 test("sanitize is a no-op for clean text", () => {
     assert.equal(sanitize("hello there, how are you?"), "hello there, how are you?");
 });
+
+test("maskTerms does not treat spaces as separators", () => {
+    assert.equal(maskTerms("fr ob", ["frob"]), "fr ob");
+    assert.equal(maskTerms("go ok then", ["frob"]), "go ok then");
+});
+
+test("maskTerms still catches dot and hyphen obfuscation", () => {
+    assert.equal(maskTerms("fr.ob", ["frob"]), "*****");
+    assert.equal(maskTerms("fr-ob", ["frob"]), "*****");
+});

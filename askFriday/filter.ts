@@ -20,13 +20,14 @@ export const HATE_TERMS: string[] = [
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, m => "\\" + m);
 
-// Allow a single common separator (space, dot, hyphen) between each letter of a
-// term so light obfuscation ("b.a.d") is still caught.
+// Allow a single dot or hyphen between each letter of a term so light
+// obfuscation ("b.a.d") is still caught. Whitespace is deliberately NOT a
+// separator - allowing it masks across word gaps (e.g. "go ok" -> a slur).
 function termPattern(term: string): RegExp {
     const body = term
         .split("")
         .map(ch => escape(ch))
-        .join("[\\s.-]?");
+        .join("[.-]?");
     return new RegExp(`\\b${body}\\b`, "gi");
 }
 

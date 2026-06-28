@@ -136,15 +136,21 @@ export function buildPrompt(
     sanitizeFn: (text: string) => string = sanitize,
 ): { system: string; user: string; } {
     const clean = (s: string) => (store.filterSlurs ? sanitizeFn(s) : s);
-    const scrub = (msgs: MessageLike[]) => msgs.map(m => ({ ...m, content: clean(m.content) }));
+    const cleanMsg = (m: MessageLike): MessageLike => ({
+        ...m,
+        content: clean(m.content),
+        author: m.author?.username ? { ...m.author, username: clean(m.author.username) } : m.author,
+    });
+    const scrub = (msgs: MessageLike[]) => msgs.map(cleanMsg);
 
     const before = scrub(context.before ?? []);
     const after = scrub(context.after ?? []);
     const hasContext = before.length > 0 || after.length > 0;
 
     const system = composeSystemPrompt(store, hasContext);
-    const who = message.author?.username ? `${message.author.username} said:` : "Someone said:";
-    const target = `${who}\n"""\n${clean(message.content)}\n"""`;
+    const t = cleanMsg(message);
+    const who = t.author?.username ? `${t.author.username} said:` : "Someone said:";
+    const target = `${who}\n"""\n${t.content}\n"""`;
 
     const parts: string[] = [];
     if (before.length) parts.push(`Recent conversation (oldest to newest):\n${transcript(before)}`);
