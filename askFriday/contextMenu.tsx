@@ -25,6 +25,13 @@ const PERSONALITY_LABELS: Record<string, string> = {
     optimist: "Bubbly optimist", britwit: "Dry British wit", professor: "Patient professor",
 };
 
+// Length keys match the `length` setting values read by the prompt builder.
+const LENGTH_OPTIONS = [
+    { value: "short", label: "Short" },
+    { value: "medium", label: "Medium" },
+    { value: "long", label: "Long" },
+];
+
 const patch: NavContextMenuPatchCallback = (children, props: any) => {
     const message = props?.message;
     if (!message?.content) return;
@@ -48,6 +55,16 @@ const patch: NavContextMenuPatchCallback = (children, props: any) => {
                         key={`personality-${value}`}
                         label={PERSONALITY_LABELS[value] ?? value}
                         action={() => generateReply(message, { personality: value })}
+                    />
+                ))}
+            </Menu.MenuItem>
+            <Menu.MenuItem id="ask-friday-length" label="Length">
+                {LENGTH_OPTIONS.map(({ value, label }) => (
+                    <Menu.MenuItem
+                        id={`ask-friday-length-${value}`}
+                        key={`length-${value}`}
+                        label={label}
+                        action={() => generateReply(message, { length: value })}
                     />
                 ))}
             </Menu.MenuItem>

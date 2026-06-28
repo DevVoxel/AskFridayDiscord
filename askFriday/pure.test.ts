@@ -143,6 +143,16 @@ test("applyOverride merges tone/personality over the view", () => {
     assert.equal(applyOverride(base).tone, "human");
 });
 
+test("applyOverride can override length, reflected in the prompt", () => {
+    const base = tone({ length: "short" });
+    assert.equal(applyOverride(base, { length: "long" }).length, "long");
+    const { system } = buildPrompt({ content: "hi" }, applyOverride(base, { length: "long" }));
+    assert.match(system, /full paragraph/i);
+    // short still maps to its own line
+    const short = buildPrompt({ content: "hi" }, applyOverride(base, { length: "short" })).system;
+    assert.match(short, /sentence or two/i);
+});
+
 test("sanitizeFn is applied to target + context but not to extraInstructions", () => {
     const fake = (s: string) => s.replace(/z/g, "*");
     const { system, user } = buildPrompt(

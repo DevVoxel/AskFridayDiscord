@@ -26,6 +26,7 @@ export interface ToneView {
 export interface StyleOverride {
     tone?: string;
     personality?: string;
+    length?: string;
 }
 
 /** Merge a one-shot style override (from the re-roll menu) over saved settings. */
