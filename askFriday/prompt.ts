@@ -114,6 +114,7 @@ function composeSystemPrompt(t: ToneView, hasContext: boolean): string {
         t.useEmojis ? "Emojis are okay if they fit." : "Do not use emojis.",
         t.matchLanguage ? "Reply in the same language as the original message." : "",
         human ? "Sound like a real person - no corporate tone, no 'As an AI', no preamble." : "",
+        "Use plain, natural punctuation. Never use em dashes or hyphens as dashes. Avoid semicolons and colons unless the subject genuinely needs them, such as code, times, or ratios.",
         "Output ONLY the reply text. No quotes, no labels, no explanation.",
         t.extraInstructions.trim(),
     ];

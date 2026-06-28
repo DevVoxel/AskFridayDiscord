@@ -204,3 +204,8 @@ test("filterSlurs=false leaves usernames untouched", () => {
     );
     assert.match(user, /zoe said:/);
 });
+
+test("system prompt always includes the punctuation rule", () => {
+    assert.match(buildPrompt({ content: "hi" }, tone()).system, /plain, natural punctuation/i);
+    assert.match(buildPrompt({ content: "hi" }, tone({ tone: "robotic" })).system, /plain, natural punctuation/i);
+});
